@@ -1,0 +1,45 @@
+#flask-microservice/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-microservice
+  labels:
+    app.kubernetes.io/name: flask-microservice
+    app.kubernetes.io/instance: flask-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: flask-microservice
+      app.kubernetes.io/instance: flask-app
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: flask-microservice
+        app.kubernetes.io/instance: flask-app
+
+    spec:
+      containers:
+        - name: flask-microservice
+          image: flask-microservice:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 5000
+
+          env:
+            - name: DB_HOST
+              value: postgres
+
+            - name: DB_PORT
+              value: "5432"
+
+            - name: DB_NAME
+              value: itemsdb
+
+            - name: DB_USER
+              value: postgres
+
+            - name: DB_PASSWORD
+              value: pass123
