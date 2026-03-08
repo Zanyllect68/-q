@@ -1,0 +1,43 @@
+name: CI/CD Flask Microservice
+
+on:
+  push:
+    branches: [master] # o main
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - run: pip install -r requirements.txt
+      - run: pytest
+
+  docker-build:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker image
+        run: docker build -t flask-app:latest .
+      # Si no tienes Docker Hub, no hay push, solo build
+
+  helm-deploy:
+    needs: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+      - run: |
+          helm upgrade --install flask-microservice ./flask-microservice \
+            --set image.repository=flask-app \
+            --set image.tag=latest \
+            --kubeconfig ${{ secrets.KUBECONFIG }}
